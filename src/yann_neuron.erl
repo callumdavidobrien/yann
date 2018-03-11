@@ -5,7 +5,7 @@
 init(InputSize) ->
    Weights = lists:duplicate(InputSize, 0),
    Inputs = lists:duplicate(InputSize, 0),
-   spawn_link(?MODULE, neuron, [0, Weights, Inputs]).
+   neuron(0, Weights, Inputs).
 
 neuron(Bias, Weights, Inputs) ->
    receive
