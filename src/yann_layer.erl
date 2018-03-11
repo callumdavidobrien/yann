@@ -1,8 +1,8 @@
 -module(yann_layer).
 
--import(lists, [map/2, zipwith/3]).
+-import(lists, []).
 
--import(yann_neuron, [init/1]).
+-import(yann_neuron, []).
 
 -export([init/2, init/3, layer/3]).
 
@@ -13,7 +13,7 @@ init(Size, InputSize, OutputLayer) ->
    NeuronSizes = lists:duplicate(Size, InputSize),
    Inputs = lists:duplicate(InputSize, 0),
    Neurons = lists:map(fun(X) -> yann_neuron:init(X) end, NeuronSizes),
-   layer(Neurons, Inputs, OutputLayer).
+   spawn_link(?MODULE, layer, [Neurons, Inputs, OutputLayer]).
 
 layer(Neurons, Inputs, OutputLayer) ->
    receive
@@ -24,14 +24,14 @@ layer(Neurons, Inputs, OutputLayer) ->
 
       {Sender, train, Changes} ->
          Sender ! ok,
-         zipwith(fun(X, Y) -> train_neuron(X, Y) end, Neurons, Changes),
+         lists:zipwith(fun(X, Y) -> train_neuron(X, Y) end, Neurons, Changes),
          update_layer(Neurons, Inputs, OutputLayer),
          layer(Neurons, Inputs, OutputLayer);
 
       {Sender, get} ->
          Activations = get_neurons(Neurons),
          Sender ! {ok, Activations},
-         layer(Neurons, Inputs, OutputLayer);
+         layer(Neurons, Inputs, OutputLayer)
 
    end.
 

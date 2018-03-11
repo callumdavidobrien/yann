@@ -1,5 +1,7 @@
 -module(yann_neuron).
--import(lists, [zipwith/3, sum/1]).
+
+-import(lists, []).
+
 -export([init/1, neuron/3]).
 
 init(InputSize) ->
@@ -22,7 +24,7 @@ neuron(Bias, Weights, Inputs) ->
       {Sender, get} ->
          Activation = activation(Bias, Weights, Inputs),
          Sender ! {ok, Activation},
-         neuron(Bias, Weights, Inputs);
+         neuron(Bias, Weights, Inputs)
 
    end.
 

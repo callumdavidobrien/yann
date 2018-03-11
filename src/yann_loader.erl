@@ -6,7 +6,7 @@
 -export([init/0, loader/2]).
 
 init() ->
-   loader("", []).
+   spawn_link(?MODULE, loader, ["", []]).
 
 loader(Path, DataSet) ->
    receive
@@ -30,10 +30,10 @@ loader(Path, DataSet) ->
    end.
 
 load_data(Path) ->
-   PathToLabelsFile = Path ++ "labels.bin",
+   PathToLabelsFile = Path ++ "labels",
    {ok, <<_:64, LabelsBinary>>} = file:read_file(PathToLabelsFile),
    Labels = parse_labels_binary(LabelsBinary),
-   PathToImagesFile = Path ++ "images.bin",
+   PathToImagesFile = Path ++ "images",
    {ok, <<_:128, ImagesBinary>>} = file:read_file(PathToImagesFile),
    Images = parse_images_binary(ImagesBinary),
    lists:zip(Labels, Images).

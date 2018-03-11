@@ -1,6 +1,6 @@
 -module(yann_network).
 
--import(lists, [duplicate/2, foldl/3, last/1, zipwith/3]).
+-import(lists, []).
 
 -import(yann_layer, []).
 
@@ -10,7 +10,7 @@ init(LayerSizes, InputSize) ->
    {Layers, _} = lists:foldl(fun make_layer/2, {[], InputSize}, LayerSizes),
    Inputs = lists:duplicate(InputSize, 0),
    update_layers(Layers, Inputs),
-   network(Layers, Inputs).
+   spawn_link(?MODULE, network, [Layers, Inputs]).
 
 network(Layers, Inputs) ->
    receive
