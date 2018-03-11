@@ -1,6 +1,6 @@
 -module(yann_neuron).
 -import(lists, [zipwith/3, sum/1]).
--export([init/1, neuron/3, activation/3]).
+-export([init/1, neuron/3]).
 
 init(InputSize) ->
    Weights = lists:duplicate(InputSize, 0),
@@ -24,14 +24,6 @@ neuron(Bias, Weights, Inputs) ->
          Sender ! {ok, Activation},
          neuron(Bias, Weights, Inputs);
 
-
-      {Sender, ping} ->
-         Sender ! ok,
-         neuron(Bias, Weights, Inputs);
-
-      _ ->
-         io:format("neuron : invalid message"),
-         neuron(Bias, Weights, Inputs)
    end.
 
 activation(Bias, Weights, Inputs) ->
