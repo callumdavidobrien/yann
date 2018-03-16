@@ -19,4 +19,3 @@ Once you have access to the board, pick a card, move it to the doing
 lane and put a note in it with your github username. When you're done, open a
 pull request and move the card into the Done lane. Reviews of open PRs with
 cards in the done lane are also appreciated! :)
-
