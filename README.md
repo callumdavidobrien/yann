@@ -8,16 +8,18 @@ Hack Keele 2018, a hackathon at Keele University.
 
 ## Contributing
 
-Kanban board:
-https://oasis.sandstorm.io/shared/Zj-tKg3e0EOxEw14q63hYHfclTfLd9Em0_67l9kjDXS
-
 If you're interested in contributing, let me know me on mastodon
 (@cdo@bsd.network), matrix (@cdo:matrix.org) or twitter (@callumdobrien)
-and I'll give you a writeable link.
+and I'll add you as a contributor.
 
-Once you have access to the board, pick a card in the "Ready for Development"
-lane, move it to the "Doing" lane and put a note in it with your github
-username. When you're done, open a pull request to "dev" and move the card
-into the "Done" lane. Reviews of open PRs with cards in the done lane are
-also appreciated! :)
+Then pick a card from the "To Do" lane on our project board, and read the
+description and comments on the issue. Work on the branch specified in the
+issue and on your own fork, and move the card into "In Progress" while you're
+working on it. Once you're finished, open a pull request, link to it in the
+issue's comments and move the card to the "Pull Requested" lane. From there
+it should be reviewed and eventually merged :)
+
+You can also help out by reviewing open pull requests, and filling out cards
+in the "Unrefined" lane. Each card needs a description of the work and a
+branch name to work on before it should be moved to "To Do".
 
