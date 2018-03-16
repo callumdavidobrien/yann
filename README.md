@@ -15,7 +15,9 @@ If you're interested in contributing, let me know me on mastodon
 (@cdo@bsd.network), matrix (@cdo:matrix.org) or twitter (@callumdobrien)
 and I'll give you a writeable link.
 
-Once you have access to the board, pick a card, move it to the doing
-lane and put a note in it with your github username. When you're done, open a
-pull request and move the card into the Done lane. Reviews of open PRs with
-cards in the done lane are also appreciated! :)
+Once you have access to the board, pick a card in the "Ready for Development"
+lane, move it to the "Doing" lane and put a note in it with your github
+username. When you're done, open a pull request to "dev" and move the card
+into the "Done" lane. Reviews of open PRs with cards in the done lane are
+also appreciated! :)
+
