@@ -4,7 +4,7 @@
 
 -import(yann_neuron, []).
 
--export([init/2, init/3, update/2, train/2, get_activations/1, layer/3]).
+-export([init/2, init/3, layer/3]).
 
 init(Size, InputSize) ->
    init(Size, InputSize, none).
@@ -13,28 +13,7 @@ init(Size, InputSize, OutputLayer) ->
    NeuronSizes = lists:duplicate(Size, InputSize),
    Inputs = lists:duplicate(InputSize, 0),
    Neurons = lists:map(fun(X) -> yann_neuron:init(X) end, NeuronSizes),
-   spawn(?MODULE, layer, [Neurons, Inputs, OutputLayer]).
-
-update(LayerPid, Inputs) ->
-   LayerPid ! {self(), update, Inputs},
-   receive
-      ok -> ok
-   after 2000 -> erlang:error(timeout)
-   end.
-
-train(LayerPid, Changes) ->
-   LayerPid ! {self(), train, Changes},
-   receive
-      ok -> ok
-   after 2000 -> erlang:error(timeout)
-   end.
-
-get_activations(LayerPid) ->
-   LayerPid ! {self(), get},
-   receive
-      {ok, Activations} -> Activations
-   after 2000 -> erlang:error(timeout)
-   end.
+   spawn_link(?MODULE, layer, [Neurons, Inputs, OutputLayer]).
 
 layer(Neurons, Inputs, OutputLayer) ->
    receive
