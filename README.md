@@ -6,6 +6,8 @@ The hope is to build a simple neural network in Erlang capable of processing
 the MNIST dataset (http://yann.lecun.com/exdb/mnist/). We started this at
 Hack Keele 2018, a hackathon at Keele University.
 
+There's a room on matrix, #yann:matrix.org, for discussion of the project.
+
 ## Contributing
 
 If you're interested in contributing, let me know me on mastodon
