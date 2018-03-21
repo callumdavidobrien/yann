@@ -77,12 +77,14 @@ layer(NeuronPids, Inputs, OutputLayer) ->
          Sender ! ok;
 
       {Sender, update, NewInputs} ->
+         update_output_layer(NeuronPids, OutputLayer),
          Sender ! ok,
          layer(NeuronPids, NewInputs, OutputLayer);
 
       {Sender, get_activations} ->
-         GetActivation = fun(_, NeuronPid) -> get_activation(NeuronPid) end,
-         Activations = map(GetActivation, NeuronPids),
+         Activations = map(
+            fun(_, NeuronPid) -> get_activation(NeuronPid) end,
+            NeuronPids),
          Sender ! {ok, Activations},
          layer(NeuronPids, Inputs, OutputLayer);
 
@@ -106,16 +108,24 @@ layer(NeuronPids, Inputs, OutputLayer) ->
 
       {Sender, change_bias, NeuronIndex, Change} ->
          NeuronPid = get(NeuronIndex, NeuronPids),
-         Sender ! change_bias(NeuronPid, Change),
+         change_bias(NeuronPid, Change),
+         update_output_layer(NeuronPids, OutputLayer),
+         Sender ! ok,
          layer(NeuronPids, Inputs, OutputLayer);
 
       {Sender, change_weight, NeuronIndex, InputIndex, Change} ->
          NeuronPid = get(NeuronIndex, NeuronPids),
-         Sender ! change_weight(NeuronPid, InputIndex, Change),
+         change_weight(NeuronPid, InputIndex, Change),
+         update_output_layer(NeuronPids, OutputLayer),
+         Sender ! ok,
          layer(NeuronPids, Inputs, OutputLayer);
-
-      {Sender, _} ->
-         Sender ! bad_message,
-         layer(NeuronPids, Inputs, OutputLayer)
    end.
+
+update_output_layer(NeuronPids, OutputLayer) when OutputLayer == none ->
+   ok;
+update_output_layer(NeuronPids, OutputLayer) ->
+   Activations = map(
+      fun(_, NeuronPid) -> get_activation(NeuronPid) end,
+      NeuronPids),
+   update(OutputLayer, Activations).
 
