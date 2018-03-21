@@ -1,6 +1,6 @@
 -module(yann_layer).
 
--import(array, [new/1, map/2]).
+-import(array, [get/2, new/1, map/2]).
 -import(yann_neuron, [init/1, get_activation/1, get_bias/1, get_weight/2, change_bias/2, change_weight/3]).
 
 -export([init/2, init/3, kill/1, update/2, get_activations/1, get_activation/2, get_bias/2, get_weight/3, change_bias/3, change_weight/4, layer/3]).
@@ -36,25 +36,40 @@ get_activations(LayerPid) ->
    after 2000 -> erlang:error(timeout)
    end.
 
-% TODO
-get_activation(_, _) ->
-   undefined.
+get_activation(LayerPid, NeuronIndex) ->
+   LayerPid ! {self(), get_activation, NeuronIndex},
+   receive
+      {ok, Activation} -> Activation
+   after 2000 -> erlang:error(timeout)
+   end.
 
-% TODO
-get_bias(_, _) ->
-   undefined.
+get_bias(LayerPid, NeuronIndex) ->
+   LayerPid ! {self(), get_bias, NeuronIndex},
+   receive
+      {ok, Bias} -> Bias
+   after 2000 -> erlang:error(timeout)
+   end.
 
-% TODO
-get_weight(_, _, _) ->
-   undefined.
+get_weight(LayerPid, NeuronIndex, InputIndex) ->
+   LayerPid ! {self(), get_weight, NeuronIndex, InputIndex},
+   receive
+      {ok, Weight} -> Weight
+   after 2000 -> erlang:error(timeout)
+   end.
 
-% TODO
-change_bias(_, _, _) ->
-   undefined.
+change_bias(LayerPid, NeuronIndex, Change) ->
+   LayerPid ! {self(), change_bias, NeuronIndex, Change},
+   receive
+      ok -> ok
+   after 2000 -> erlang:error(timeout)
+   end.
 
-% TODO
-change_weight(_, _, _, _) ->
-   undefined.
+change_weight(LayerPid, NeuronIndex, InputIndex, Change) ->
+   LayerPid ! {self(), change_weight, NeuronIndex, InputIndex, Change},
+   receive
+      ok -> ok
+   after 2000 -> erlang:error(timeout)
+   end.
 
 layer(NeuronPids, Inputs, OutputLayer) ->
    receive
@@ -66,18 +81,41 @@ layer(NeuronPids, Inputs, OutputLayer) ->
          layer(NeuronPids, NewInputs, OutputLayer);
 
       {Sender, get_activations} ->
-         Activations = get_neuron_activations(NeuronPids),
+         GetActivation = fun(_, NeuronPid) -> get_activation(NeuronPid) end,
+         Activations = map(GetActivation, NeuronPids),
          Sender ! {ok, Activations},
+         layer(NeuronPids, Inputs, OutputLayer);
+
+      {Sender, get_activation, NeuronIndex} ->
+         NeuronPid = get(NeuronIndex, NeuronPids),
+         Activation = get_activation(NeuronPid),
+         Sender ! {ok, Activation},
+         layer(NeuronPids, Inputs, OutputLayer);
+
+      {Sender, get_bias, NeuronIndex} ->
+         NeuronPid = get(NeuronIndex, NeuronPids),
+         Bias = get_bias(NeuronPid),
+         Sender ! {ok, Bias},
+         layer(NeuronPids, Inputs, OutputLayer);
+
+      {Sender, get_weight, NeuronIndex, InputIndex} ->
+         NeuronPid = get(NeuronIndex, NeuronPids),
+         Weight = get_weight(NeuronPid, InputIndex),
+         Sender ! {ok, Weight},
+         layer(NeuronPids, Inputs, OutputLayer);
+
+      {Sender, change_bias, NeuronIndex, Change} ->
+         NeuronPid = get(NeuronIndex, NeuronPids),
+         Sender ! change_bias(NeuronPid, Change),
+         layer(NeuronPids, Inputs, OutputLayer);
+
+      {Sender, change_weight, NeuronIndex, InputIndex, Change} ->
+         NeuronPid = get(NeuronIndex, NeuronPids),
+         Sender ! change_weight(NeuronPid, InputIndex, Change),
          layer(NeuronPids, Inputs, OutputLayer);
 
       {Sender, _} ->
          Sender ! bad_message,
          layer(NeuronPids, Inputs, OutputLayer)
    end.
-
-get_neuron_activations(NeuronPids) ->
-   GetActivation = fun(_, NeuronPid) ->
-      get_activation(NeuronPid)
-   end,
-   map(GetActivation, NeuronPids).
 
