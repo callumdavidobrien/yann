@@ -1,19 +1,26 @@
 -module(yann_layer).
 
--import(lists, []).
+-import(array, [new/1, map/2]).
+-import(yann_neuron, [init/1, get_activation/1, get_bias/1, get_weight/2, change_bias/2, change_weight/3]).
 
--import(yann_neuron, []).
+-export([init/2, init/3, kill/1, update/2, get_activations/1, get_activation/2, get_bias/2, get_weight/3, change_bias/3, change_weight/4, layer/3]).
 
--export([init/2, init/3, update/2, train/2, get_activations/1, layer/3]).
-
-init(Size, InputSize) ->
-   init(Size, InputSize, none).
+init(LayerSize, InputSize) ->
+   init(LayerSize, InputSize, none).
 
 init(Size, InputSize, OutputLayer) ->
-   NeuronSizes = lists:duplicate(Size, InputSize),
-   Inputs = lists:duplicate(InputSize, 0),
-   Neurons = lists:map(fun(X) -> yann_neuron:init(X) end, NeuronSizes),
-   spawn(?MODULE, layer, [Neurons, Inputs, OutputLayer]).
+   NeuronPids = map(fun(_, _) -> init(InputSize) end, new(Size)),
+   Inputs = map(fun(_, _) -> 0 end, new(Size)),
+   LayerPid = spawn(?MODULE, layer, [NeuronPids, Inputs, OutputLayer]),
+   update(LayerPid, Inputs),
+   LayerPid.
+
+kill(LayerPid) ->
+   LayerPid ! {self(), die},
+   receive
+      ok -> ok
+   after 2000 -> erlang:error(timeout)
+   end.
 
 update(LayerPid, Inputs) ->
    LayerPid ! {self(), update, Inputs},
@@ -22,80 +29,55 @@ update(LayerPid, Inputs) ->
    after 2000 -> erlang:error(timeout)
    end.
 
-train(LayerPid, Changes) ->
-   LayerPid ! {self(), train, Changes},
-   receive
-      ok -> ok
-   after 2000 -> erlang:error(timeout)
-   end.
-
 get_activations(LayerPid) ->
-   LayerPid ! {self(), get},
+   LayerPid ! {self(), get_activations},
    receive
       {ok, Activations} -> Activations
    after 2000 -> erlang:error(timeout)
    end.
 
-layer(Neurons, Inputs, OutputLayer) ->
+% TODO
+get_activation(_, _) ->
+   undefined.
+
+% TODO
+get_bias(_, _) ->
+   undefined.
+
+% TODO
+get_weight(_, _, _) ->
+   undefined.
+
+% TODO
+change_bias(_, _, _) ->
+   undefined.
+
+% TODO
+change_weight(_, _, _, _) ->
+   undefined.
+
+layer(NeuronPids, Inputs, OutputLayer) ->
    receive
+      {Sender, die} ->
+         Sender ! ok;
+
       {Sender, update, NewInputs} ->
          Sender ! ok,
-         update_layer(Neurons, NewInputs, OutputLayer),
-         layer(Neurons, NewInputs, OutputLayer);
+         layer(NeuronPids, NewInputs, OutputLayer);
 
-      {Sender, train, Changes} ->
-         Sender ! ok,
-         lists:zipwith(fun(X, Y) -> train_neuron(X, Y) end, Neurons, Changes),
-         update_layer(Neurons, Inputs, OutputLayer),
-         layer(Neurons, Inputs, OutputLayer);
-
-      {Sender, get} ->
-         Activations = get_neurons(Neurons),
+      {Sender, get_activations} ->
+         Activations = get_neuron_activations(NeuronPids),
          Sender ! {ok, Activations},
-         layer(Neurons, Inputs, OutputLayer)
+         layer(NeuronPids, Inputs, OutputLayer);
 
+      {Sender, _} ->
+         Sender ! bad_message,
+         layer(NeuronPids, Inputs, OutputLayer)
    end.
 
-update_layer(Neurons, Inputs, none) ->
-   lists:map(fun(X) -> update_neuron(X, Inputs) end, Neurons);
-update_layer(Neurons, Inputs, OutputLayer) ->
-   lists:map(fun(X) -> update_neuron(X, Inputs) end, Neurons),
-   Activations = get_neurons(Neurons),
-   OutputLayer ! {self(), update, Activations},
-   receive
-      ok -> ok
-   after 1000 ->
-      io:format("layer : dead layer"),
-      erlang:error(dead_layer)
-   end.
-
-get_neurons(Neurons) ->
-   lists:map(fun get_neuron/1, Neurons).
-
-update_neuron(Neuron, Inputs) ->
-   Neuron ! {self(), update, Inputs},
-   receive
-      ok -> ok
-   after 1000 ->
-      io:format("layer : dead neuron"),
-      erlang:error(dead_neuron)
-   end.
-
-train_neuron(Neuron, {BiasChange, WeightChanges}) ->
-   Neuron ! {self(), train, BiasChange, WeightChanges},
-   receive
-      ok -> ok
-   after 1000 ->
-      io:format("layer : dead neuron"),
-      erlang:error(dead_neuron)
-   end.
-
-get_neuron(Neuron) ->
-   Neuron ! {self(), get},
-   receive
-      {ok, Activation} -> Activation
-   after 1000 ->
-      io:format("layer : dead neuron"),
-      erlang:error(dead_neuron)
-   end.
+get_neuron_activations(NeuronPids) ->
+   GetActivation = fun(_, NeuronPid) ->
+      get_activation(NeuronPid)
+   end,
+   map(GetActivation, NeuronPids).
 
